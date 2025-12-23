@@ -53,7 +53,10 @@ function App() {
         }}
       />
 
-      <AdminPanel isAdmin={isAdmin} />
+      <AdminPanel
+        // isAdmin={isAdmin}
+        isAdmin
+      />
     </>
   );
 }
