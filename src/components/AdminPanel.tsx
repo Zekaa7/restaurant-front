@@ -1,14 +1,29 @@
 import { useState } from "react";
 import ReusableCard from "./ReusableCard";
+import AdditemsToMenu from "./AdditemsToMenu";
+
+export interface MenuItemData {
+  first: {
+    name: string;
+    volume_ml: number;
+  };
+  second: number;
+}
 
 const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   const clickedCardHandler = (title: string) => {
     setSelectedCard(title);
-    console.log("TITLE FROM ADMIN", title);
+  };
+  const closeModal = () => {
+    setSelectedCard(null);
   };
 
+  const handleModalSubmit = (data: any) => {
+    console.log("PODACI IZ MODALA", data);
+    closeModal();
+  };
   return (
     <main className="max-w-7xl mx-auto px-6 py-10">
       {isAdmin && (
@@ -19,7 +34,7 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
             img="🍺"
             title="Ažuriraj meni"
             text="Dodaj, obriši ili izmeni pića u ponudi restorana."
-            onClick={clickedCardHandler} // direktno prosleđujemo handler
+            onClick={clickedCardHandler}
           />
 
           <ReusableCard
@@ -36,6 +51,13 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
             onClick={clickedCardHandler}
           />
         </div>
+      )}
+      {selectedCard === "Ažuriraj meni" && (
+        <AdditemsToMenu
+          isOpen={true}
+          onClose={closeModal}
+          onSuccess={handleModalSubmit}
+        />
       )}
     </main>
   );
