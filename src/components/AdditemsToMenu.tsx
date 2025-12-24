@@ -116,6 +116,7 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
           inputValue={input2}
           setInputValue={setInput2}
           getOptionLabel={(opt) => opt}
+          casa={true}
         />
 
         <div className="mt-6 flex justify-end gap-3">

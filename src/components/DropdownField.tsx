@@ -11,6 +11,7 @@ interface DropdownFieldProps<T> {
   inputExtraValue?: string;
   setInputExtraValue?: (v: string) => void;
   getOptionLabel?: (option: T) => string;
+  casa?: boolean;
 }
 
 function DropdownField<T>({
@@ -23,6 +24,7 @@ function DropdownField<T>({
   inputExtraValue,
   setInputExtraValue,
   getOptionLabel = (option: T) => String(option),
+  casa,
 }: DropdownFieldProps<T>) {
   return (
     <div className="mb-4">
@@ -82,25 +84,29 @@ function DropdownField<T>({
         </div>
       </Listbox>
 
-      {/* Inputi za manuelni unos */}
-      <input
-        type="text"
-        placeholder="Naziv..."
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
-        disabled={!!selected}
-      />
+      {/* Input polja se prikazuju SAMO ako ništa nije selektovano */}
+      {!selected && (
+        <>
+          <input
+            type={casa ? "number" : "text"}
+            placeholder={casa ? "Unesi veličinu case (ml)" : "Naziv..."}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            min={casa ? 1 : undefined}
+            className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
 
-      {inputExtraValue !== undefined && setInputExtraValue && (
-        <input
-          type="number"
-          placeholder="Volumen (ml)..."
-          value={inputExtraValue}
-          onChange={(e) => setInputExtraValue(e.target.value)}
-          className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
-          disabled={!!selected}
-        />
+          {inputExtraValue !== undefined && setInputExtraValue && (
+            <input
+              type="number"
+              placeholder="Veličina case (ml)..."
+              value={inputExtraValue}
+              onChange={(e) => setInputExtraValue(e.target.value)}
+              min={1}
+              className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          )}
+        </>
       )}
     </div>
   );
