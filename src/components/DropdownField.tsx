@@ -1,6 +1,6 @@
 import { Listbox } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface DropdownFieldProps<T> {
   label: string;
@@ -8,19 +8,26 @@ interface DropdownFieldProps<T> {
   selected: T | null;
   setSelected: (v: T | null) => void;
 
-  // Opcioni input za kreiranje nove opcije kada ništa nije izabrano
   inputValue?: string;
   setInputValue?: (v: string) => void;
-
-  // Dodatno polje (npr. za volume_ml kod pića ili amount_ml kod čaše)
   inputExtraValue?: string;
   setInputExtraValue?: (v: string) => void;
 
-  getOptionLabel?: (option: T) => string;
+  stockInputValue?: string;
+  setStockInputValue?: (v: string) => void;
 
-  // Da li je ovo dropdown za "čašu" (pa treba number input)
+  // Opcioni prop: kako da dobijemo ID iz selected objekta
+  getItemId?: (item: T) => number;
+
+  getOptionLabel?: (option: T) => string;
   casa?: boolean;
+  enableStockInput?: boolean;
+
+  mode?: "add-to-menu" | "increment-stock";
 }
+
+const ipaddress = "http://localhost:3001";
+// const ipaddress = "http://192.168.1.160";
 
 function DropdownField<T>({
   label,
@@ -31,22 +38,67 @@ function DropdownField<T>({
   setInputValue,
   inputExtraValue,
   setInputExtraValue,
+  stockInputValue,
+  setStockInputValue,
+  getItemId,
   getOptionLabel = (option: T) => String(option),
   casa = false,
+  enableStockInput = false,
+  mode
 }: DropdownFieldProps<T>) {
   const [filter, setFilter] = useState("");
+  const [currentStock, setCurrentStock] = useState<number | null>(null);
+  const [loadingStock, setLoadingStock] = useState(false);
 
   const filteredOptions = options.filter((opt) =>
     getOptionLabel(opt).toLowerCase().includes(filter.toLowerCase())
   );
 
-  // Da li treba prikazati input polja za unos nove vrednosti?
-  const shouldShowInputs =
-    !selected &&
+  const isCreatingNew = !selected;
+  const shouldShowCreateInputs =
+    isCreatingNew &&
     (setInputValue !== undefined || setInputExtraValue !== undefined);
 
+  const canEditStock = enableStockInput && setStockInputValue !== undefined;
+  const shouldShowStockInput =
+    canEditStock &&
+    (isCreatingNew ? shouldShowCreateInputs : selected !== null);
+
+  useEffect(() => {
+    if (!selected || !getItemId) {
+      setCurrentStock(null);
+      return;
+    }
+
+    const itemId = getItemId(selected);
+    console.log(itemId);
+
+    const fetchStock = async () => {
+      setLoadingStock(true);
+      try {
+        const response = await fetch(`${ipaddress}/api/getCurrentStock`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ drink_id: itemId }),
+        });
+
+        if (!response.ok) throw new Error();
+
+        const data = await response.json();
+        setCurrentStock(data.quantity);
+      } catch (err) {
+        console.error("Greška pri dohvatanju zalihe:", err);
+        setCurrentStock(0);
+      } finally {
+        setLoadingStock(false);
+      }
+    };
+
+    fetchStock();
+  }, [selected, getItemId]);
+
   return (
-    <div className="mb-4">
+    <div className="mb-6">
       <label className="mb-1 block text-sm font-medium text-gray-700">
         {label}
       </label>
@@ -63,7 +115,6 @@ function DropdownField<T>({
           </Listbox.Button>
 
           <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
-            {/* Pretraga */}
             <div className="px-3 py-2">
               <input
                 type="text"
@@ -74,7 +125,6 @@ function DropdownField<T>({
               />
             </div>
 
-            {/* Opcija za reset */}
             <Listbox.Option
               value={null}
               className={({ active }) =>
@@ -114,10 +164,10 @@ function DropdownField<T>({
         </div>
       </Listbox>
 
-      {/* Prikaz inputa samo ako je ništa nije selektovano I ako su prosleđeni handleri */}
-      {shouldShowInputs && (
-        <>
-          {/* Glavni input (naziv pića ili veličina čaše) */}
+      {/* Kreiranje novog */}
+      {/* Kreiranje novog – početna zaliha */}
+      {shouldShowCreateInputs && (
+        <div className="mt-4 space-y-3">
           {setInputValue !== undefined && (
             <input
               type={casa ? "number" : "text"}
@@ -127,11 +177,10 @@ function DropdownField<T>({
               value={inputValue ?? ""}
               onChange={(e) => setInputValue(e.target.value)}
               min={casa ? 1 : undefined}
-              className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           )}
 
-          {/* Dodatno polje (npr. volume_ml za piće) */}
           {setInputExtraValue !== undefined && (
             <input
               type="number"
@@ -139,10 +188,55 @@ function DropdownField<T>({
               value={inputExtraValue ?? ""}
               onChange={(e) => setInputExtraValue(e.target.value)}
               min={1}
-              className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           )}
-        </>
+
+          {shouldShowStockInput && isCreatingNew && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <label className="block text-sm font-medium text-blue-800 mb-2">
+                Početna zaliha (komada)
+              </label>
+              <input
+                type="number"
+                placeholder="Koliko flaša na početku?"
+                value={stockInputValue ?? ""}
+                onChange={(e) => setStockInputValue(e.target.value)}
+                min={0}
+                className="w-full rounded-md border border-blue-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Dopuna zalihe – SAMO u modu "increment-stock" */}
+      {mode === "increment-stock" && shouldShowStockInput && selected && (
+        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+          <label className="block text-sm font-medium text-green-800 mb-2">
+            Dopuni zalihu
+          </label>
+          <input
+            type="number"
+            placeholder="Koliko komada dodati?"
+            value={stockInputValue ?? ""}
+            onChange={(e) => setStockInputValue(e.target.value)}
+            min={1}
+            className="w-full rounded-md border border-green-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+
+          <div className="mt-2 space-y-1">
+            <p className="text-sm text-green-700">
+              Izabrano: <strong>{getOptionLabel(selected)}</strong>
+            </p>
+            <p className="text-sm text-green-700">
+              Trenutno na stanju:{" "}
+              <strong>
+                {loadingStock ? "Učitavanje..." : `${currentStock ?? 0} komada`}
+              </strong>
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );

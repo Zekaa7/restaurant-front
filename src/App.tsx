@@ -54,8 +54,8 @@ function App() {
       />
 
       <AdminPanel
-        isAdmin={isAdmin}
-        // isAdmin
+        // isAdmin={isAdmin}
+        isAdmin
       />
     </>
   );

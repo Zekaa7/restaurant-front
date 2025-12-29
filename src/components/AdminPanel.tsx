@@ -9,15 +9,20 @@ export interface AddMenuItemPayload {
     volume_ml: number;
   };
   second: number;
+  stock?: number;
 }
 
 export interface DeleteMenuItemPayload {
   id: number;
 }
-
+export interface IncrementStockPayload {
+  drink_id: number;
+  add: number; // koliko dodati na trenutnu zalihu
+}
 export type ModalSubmitData =
   | { action: "add"; payload: AddMenuItemPayload }
-  | { action: "delete"; payload: DeleteMenuItemPayload };
+  | { action: "delete"; payload: DeleteMenuItemPayload }
+  | { action: "increment_stock"; payload: IncrementStockPayload };
 
 const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
@@ -31,8 +36,8 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
   const closeModal = () => {
     setSelectedCard(null);
   };
-  const ipaddress = "http://192.168.1.160";
-  // const ipaddress = "http://localhost";
+  // const ipaddress = "http://192.168.1.160";
+  const ipaddress = "http://localhost:3001";
 
   // API funkcije
   const newDrinkInMenu = async (payload: AddMenuItemPayload) => {
@@ -57,6 +62,34 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
     return result;
   };
 
+  // const updateStock = async (drink_id: number, quantity: number) => {
+  //   const response = await fetch(`${ipaddress}/api/update-stock`, {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({ drink_id, quantity }),
+  //   });
+  //   if (!response.ok) {
+  //     const err = await response.json();
+  //     console.warn("Greška pri ažuriranju zalihe:", err);
+  //     return false;
+  //   }
+  //   return true;
+  // };
+
+  const incrementStock = async (drink_id: number, add: number) => {
+    const response = await fetch(`${ipaddress}/api/increment-stock`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ drink_id, add }),
+    });
+    if (!response.ok) {
+      const err = await response.json();
+      console.warn("Greška pri dopuni zalihe:", err);
+      return false;
+    }
+    return true;
+  };
+
   // Handle submit iz modalnog prozora
   const handleModalSubmit = async (data: ModalSubmitData) => {
     console.log(data);
@@ -65,7 +98,16 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
       setErrorMessage("");
 
       if (data.action === "add") {
-        await newDrinkInMenu(data.payload);
+        const { first, second, stock } = data.payload;
+        const menuResult = await newDrinkInMenu({ first, second });
+        const drinkId = menuResult.drink_id;
+
+        if (stock !== undefined && stock >= 0) {
+          await incrementStock(drinkId, stock);
+        }
+      } else if (data.action === "increment_stock") {
+        const { drink_id, add } = data.payload;
+        await incrementStock(drink_id, add); // ← OVDE SE POZIVA!
       } else if (data.action === "delete") {
         await deleteDrink(data.payload);
       }
@@ -73,7 +115,7 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
       closeModal();
     } catch (err: any) {
       setIsError(true);
-      setErrorMessage(err.message || "Došlo je do greške prilikom operacije.");
+      setErrorMessage(err.message || "Došlo je do greške.");
       console.error("Greška:", err);
     }
   };

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ModalSubmitData } from "./AdminPanel";
 import DropdownField from "./DropdownField";
-// import process from "process";
 
 interface DrinksProps {
   id: number;
@@ -20,10 +19,9 @@ interface AddItemToMenuProps {
   onSuccess: (data: ModalSubmitData) => void;
   serverError: string;
 }
-// const IPADDRESS = process.env.IPADDRESS;
 
-const ipaddress = "http://192.168.1.160";
-// const ipaddress = "http://localhost";
+const ipaddress = "http://localhost";
+
 const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
   isOpen,
   onClose,
@@ -33,19 +31,26 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
   const [drinks, setDrinks] = useState<DrinksProps[]>([]);
   const [glasses, setGlasses] = useState<GlassesProps[]>([]);
 
-  const [selected1, setSelected1] = useState<DrinksProps | null>(null);
-  const [selected2, setSelected2] = useState<string | null>(null);
+  // Zajedničko za sve tabove
+  const [selectedDrink, setSelectedDrink] = useState<DrinksProps | null>(null);
+  const [selectedGlass, setSelectedGlass] = useState<string | null>(null);
 
+  // Za dodavanje novog pića
   const [inputName, setInputName] = useState("");
   const [inputVolume, setInputVolume] = useState("");
-  const [input2, setInput2] = useState("");
+
+  // Za čašu
+  const [inputGlass, setInputGlass] = useState("");
+
+  // Za zalihu
+  const [stockAmount, setStockAmount] = useState("");
 
   const [error, setError] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dodaj" | "obrisi" | "izmeni">(
-    "dodaj"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "meni" | "zaliha" | "obrisi" | "izmeni"
+  >("meni");
 
-  // Učitavanje podataka kada se modal otvori
+  // Učitavanje podataka
   useEffect(() => {
     if (!isOpen) return;
 
@@ -62,63 +67,77 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
         const glassesJson = await res2.json();
         setGlasses(glassesJson.data);
       } catch (err) {
-        console.error("Greška pri učitavanju podataka:", err);
+        console.error("Greška pri učitavanju:", err);
       }
     };
 
     fetchData();
   }, [isOpen]);
 
-  // Resetovanje forme prilikom promene taba
+  // Reset forme na promenu taba
   useEffect(() => {
     setError(false);
-    setSelected1(null);
-    setSelected2(null);
+    setSelectedDrink(null);
+    setSelectedGlass(null);
     setInputName("");
     setInputVolume("");
-    setInput2("");
+    setInputGlass("");
+    setStockAmount("");
   }, [activeTab]);
 
   const handleSubmit = () => {
     setError(false);
 
-    if (activeTab === "dodaj") {
+    if (activeTab === "meni") {
+      // Dodavanje u meni – obavezno piće i čaša
       if (
-        (!selected1 && (!inputName.trim() || !inputVolume.trim())) ||
-        (!selected2 && !input2.trim())
+        (!selectedDrink && (!inputName.trim() || !inputVolume.trim())) ||
+        (!selectedGlass && !inputGlass.trim())
       ) {
         setError(true);
         return;
       }
 
-      const drinkData = selected1
-        ? { name: selected1.name, volume_ml: selected1.volume_ml }
+      const drinkData = selectedDrink
+        ? { name: selectedDrink.name, volume_ml: selectedDrink.volume_ml }
         : { name: inputName.trim(), volume_ml: parseInt(inputVolume, 10) };
 
-      const glassAmount = selected2
-        ? parseInt(selected2, 10)
-        : parseInt(input2, 10);
+      const glassAmount = selectedGlass
+        ? parseInt(selectedGlass, 10)
+        : parseInt(inputGlass, 10);
 
       onSuccess({
         action: "add",
         payload: {
           first: drinkData,
           second: glassAmount,
+          stock: stockAmount ? parseInt(stockAmount, 10) : undefined,
+        },
+      });
+    } else if (activeTab === "zaliha") {
+      // Dopuna zalihe – samo piće i količina obavezni
+      if (!selectedDrink || !stockAmount || parseInt(stockAmount) <= 0) {
+        setError(true);
+        return;
+      }
+
+      onSuccess({
+        action: "increment_stock",
+        payload: {
+          drink_id: selectedDrink.id,
+          add: parseInt(stockAmount, 10),
         },
       });
     } else if (activeTab === "obrisi") {
-      if (!selected1) {
+      if (!selectedDrink) {
         setError(true);
         return;
       }
 
       onSuccess({
         action: "delete",
-        payload: { id: selected1.id },
+        payload: { id: selectedDrink.id },
       });
-    } else if (activeTab === "izmeni") {
-      // Placeholder – možeš proširiti kasnije
-      alert("Izmena još uvek nije implementirana.");
     }
   };
 
@@ -127,23 +146,34 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
-        <div className="flex space-x-6 border-b border-gray-200 mb-6">
+        <div className="flex flex-wrap gap-4 border-b border-gray-200 mb-6">
           <h2
-            className={`text-xl font-semibold pb-2 cursor-pointer border-b-2 ${
-              activeTab === "dodaj"
-                ? "text-gray-800 border-blue-500"
-                : "text-gray-500 border-transparent hover:border-gray-300"
+            className={`text-lg font-semibold pb-2 cursor-pointer border-b-2 ${
+              activeTab === "meni"
+                ? "text-blue-600 border-blue-500"
+                : "text-gray-500 hover:border-gray-300"
             }`}
-            onClick={() => setActiveTab("dodaj")}
+            onClick={() => setActiveTab("meni")}
           >
-            Dodaj stavku u meni
+            Dodaj u meni
           </h2>
 
           <h2
-            className={`text-xl font-semibold pb-2 cursor-pointer border-b-2 ${
+            className={`text-lg font-semibold pb-2 cursor-pointer border-b-2 ${
+              activeTab === "zaliha"
+                ? "text-green-600 border-green-500"
+                : "text-gray-500 hover:border-gray-300"
+            }`}
+            onClick={() => setActiveTab("zaliha")}
+          >
+            Dopuni zalihu
+          </h2>
+
+          <h2
+            className={`text-lg font-semibold pb-2 cursor-pointer border-b-2 ${
               activeTab === "obrisi"
                 ? "text-red-600 border-red-500"
-                : "text-gray-500 border-transparent hover:border-red-300"
+                : "text-gray-500 hover:border-gray-300"
             }`}
             onClick={() => setActiveTab("obrisi")}
           >
@@ -151,10 +181,10 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
           </h2>
 
           <h2
-            className={`text-xl font-semibold pb-2 cursor-pointer border-b-2 ${
+            className={`text-lg font-semibold pb-2 cursor-pointer border-b-2 ${
               activeTab === "izmeni"
-                ? "text-green-600 border-green-500"
-                : "text-gray-500 border-transparent hover:border-green-300"
+                ? "text-orange-600 border-orange-500"
+                : "text-gray-500 hover:border-gray-300"
             }`}
             onClick={() => setActiveTab("izmeni")}
           >
@@ -164,80 +194,98 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
 
         {error && (
           <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
-            {activeTab === "obrisi"
-              ? "Moraš izabrati piće za brisanje."
-              : "Popuni sva polja."}
+            Popuni obavezna polja.
           </p>
         )}
 
-        {activeTab === "dodaj" && (
+        {/* 1. Dodaj u meni */}
+        {activeTab === "meni" && (
           <>
             <DropdownField
-              label="Kategorija (piće)"
+              label="Piće"
               options={drinks}
-              selected={selected1}
-              setSelected={setSelected1}
+              selected={selectedDrink}
+              setSelected={setSelectedDrink}
               inputValue={inputName}
               setInputValue={setInputName}
               inputExtraValue={inputVolume}
               setInputExtraValue={setInputVolume}
-              getOptionLabel={(drink) => `${drink.name} ${drink.volume_ml}ml`}
+              getOptionLabel={(d) => `${d.name} ${d.volume_ml}ml`}
+              getItemId={(d) => d.id}
+              enableStockInput={true}
+              stockInputValue={stockAmount}
+              setStockInputValue={setStockAmount}
             />
+
             <DropdownField
-              label="Veličina čaše"
+              label="Čaša"
               options={glasses.map((g) => `${g.amount_ml} ml`)}
-              selected={selected2}
-              setSelected={setSelected2}
-              inputValue={input2}
-              setInputValue={setInput2}
+              selected={selectedGlass}
+              setSelected={setSelectedGlass}
+              inputValue={inputGlass}
+              setInputValue={setInputGlass}
               getOptionLabel={(opt) => opt}
               casa={true}
+              mode="add-to-menu"
             />
           </>
         )}
 
+        {/* 2. Dopuni zalihu – SAMO piće i količina */}
+        {activeTab === "zaliha" && (
+          <DropdownField
+            label="Izaberi piće za dopunu zalihe"
+            options={drinks}
+            selected={selectedDrink}
+            setSelected={setSelectedDrink}
+            getOptionLabel={(d) => `${d.name} ${d.volume_ml}ml`}
+            getItemId={(d) => d.id}
+            enableStockInput={true}
+            stockInputValue={stockAmount}
+            setStockInputValue={setStockAmount}
+            mode="increment-stock"
+          />
+        )}
+
+        {/* 3. Obriši */}
         {activeTab === "obrisi" && (
           <DropdownField
             label="Izaberi piće za brisanje"
             options={drinks}
-            selected={selected1}
-            setSelected={setSelected1}
-            getOptionLabel={(drink) => `${drink.name} ${drink.volume_ml}ml`}
+            selected={selectedDrink}
+            setSelected={setSelectedDrink}
+            getOptionLabel={(d) => `${d.name} ${d.volume_ml}ml`}
           />
         )}
 
+        {/* 4. Izmena */}
         {activeTab === "izmeni" && (
-          <p className="text-gray-500">Funkcionalnost izmjene u izradi...</p>
+          <p className="text-gray-500 text-center py-8">U izradi...</p>
         )}
 
-        <div className="mt-6 space-y-4">
-          {serverError && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {serverError}
-            </div>
-          )}
+        <div className="mt-8 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+          >
+            Otkaži
+          </button>
 
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={onClose}
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-            >
-              Otkaži
-            </button>
-
-            <button
-              onClick={handleSubmit}
-              className={`rounded-md px-5 py-2 text-sm font-semibold text-white transition focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                activeTab === "obrisi"
-                  ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                  : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
-              }`}
-            >
-              {activeTab === "dodaj" && "Sačuvaj"}
-              {activeTab === "obrisi" && "Obriši"}
-              {activeTab === "izmeni" && "Sačuvaj izmene"}
-            </button>
-          </div>
+          <button
+            onClick={handleSubmit}
+            className={`px-6 py-2 rounded-md text-white font-medium ${
+              activeTab === "obrisi"
+                ? "bg-red-600 hover:bg-red-700"
+                : activeTab === "zaliha"
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {activeTab === "meni" && "Dodaj u meni"}
+            {activeTab === "zaliha" && "Dopuni zalihu"}
+            {activeTab === "obrisi" && "Obriši"}
+            {activeTab === "izmeni" && "Sačuvaj izmene"}
+          </button>
         </div>
       </div>
     </div>
