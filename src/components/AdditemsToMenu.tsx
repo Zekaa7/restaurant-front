@@ -31,6 +31,11 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
   const [drinks, setDrinks] = useState<DrinksProps[]>([]);
   const [glasses, setGlasses] = useState<GlassesProps[]>([]);
 
+  // Pamti u kom tabu je bila poslednja server greška
+  const [errorTab, setErrorTab] = useState<
+    "meni" | "zaliha" | "obrisi" | "izmeni" | null
+  >(null);
+
   // Zajedničko za sve tabove
   const [selectedDrink, setSelectedDrink] = useState<DrinksProps | null>(null);
   const [selectedGlass, setSelectedGlass] = useState<string | null>(null);
@@ -49,7 +54,6 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
   const [activeTab, setActiveTab] = useState<
     "meni" | "zaliha" | "obrisi" | "izmeni"
   >("meni");
-
   // Učitavanje podataka
   useEffect(() => {
     if (!isOpen) return;
@@ -73,6 +77,20 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
 
     fetchData();
   }, [isOpen]);
+  console.log(serverError);
+  //Na kom tabu se desila greska
+  useEffect(() => {
+    if (serverError) {
+      setErrorTab(activeTab);
+    } else {
+      setErrorTab(null);
+    }
+  }, [serverError, activeTab]);
+
+  // Kada korisnik promeni tab – sakrij server grešku (ona je iz starog taba)
+  useEffect(() => {
+    setErrorTab(null);
+  }, [activeTab]);
 
   // Reset forme na promenu taba
   useEffect(() => {
@@ -142,7 +160,6 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
   };
 
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
@@ -264,6 +281,11 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
         )}
 
         <div className="mt-8 flex justify-end gap-3">
+          {serverError && errorTab === activeTab && (
+            <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-xl text-red-600">
+              {serverError}
+            </p>
+          )}
           <button
             onClick={onClose}
             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"

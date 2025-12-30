@@ -44,7 +44,7 @@ function DropdownField<T>({
   getOptionLabel = (option: T) => String(option),
   casa = false,
   enableStockInput = false,
-  mode
+  mode,
 }: DropdownFieldProps<T>) {
   const [filter, setFilter] = useState("");
   const [currentStock, setCurrentStock] = useState<number | null>(null);
@@ -72,7 +72,6 @@ function DropdownField<T>({
 
     const itemId = getItemId(selected);
     console.log(itemId);
-
     const fetchStock = async () => {
       setLoadingStock(true);
       try {
@@ -170,9 +169,10 @@ function DropdownField<T>({
         <div className="mt-4 space-y-3">
           {setInputValue !== undefined && (
             <input
+              autoFocus={!casa}
               type={casa ? "number" : "text"}
               placeholder={
-                casa ? "Unesi veličinu čaše (ml)" : "Unesi naziv pića..."
+                !casa ? "Unesi naziv pića..." : "Unesi veličinu čaše (ml)"
               }
               value={inputValue ?? ""}
               onChange={(e) => setInputValue(e.target.value)}
