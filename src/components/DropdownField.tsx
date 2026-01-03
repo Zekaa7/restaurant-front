@@ -1,6 +1,7 @@
 import { Listbox } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { useEffect, useState } from "react";
+import {ipaddress} from '../helper'
 
 interface DropdownFieldProps<T> {
   label: string;
@@ -26,8 +27,7 @@ interface DropdownFieldProps<T> {
   mode?: "add-to-menu" | "increment-stock";
 }
 
-const ipaddress = "http://localhost:3001";
-// const ipaddress = "http://192.168.1.160";
+
 
 function DropdownField<T>({
   label,

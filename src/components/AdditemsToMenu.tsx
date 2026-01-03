@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import type { ModalSubmitData } from "./AdminPanel";
+import type { ModalSubmitData } from "../helper";
 import DropdownField from "./DropdownField";
+import { ipaddress } from "../helper";
 
 interface DrinksProps {
   id: number;
@@ -20,7 +21,7 @@ interface AddItemToMenuProps {
   serverError: string;
 }
 
-const ipaddress = "http://localhost";
+
 
 const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
   isOpen,
@@ -61,8 +62,8 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
     const fetchData = async () => {
       try {
         const [res1, res2] = await Promise.all([
-          fetch(`${ipaddress}:3001/api/drinks`),
-          fetch(`${ipaddress}:3001/api/getGlasses`),
+          fetch(`${ipaddress}/api/drinks`),
+          fetch(`${ipaddress}/api/getGlasses`),
         ]);
 
         const drinksJson = await res1.json();
@@ -196,7 +197,7 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
           >
             Obriši piće
           </h2>
-
+{/* 
           <h2
             className={`text-lg font-semibold pb-2 cursor-pointer border-b-2 ${
               activeTab === "izmeni"
@@ -206,7 +207,7 @@ const AdditemsToMenu: React.FC<AddItemToMenuProps> = ({
             onClick={() => setActiveTab("izmeni")}
           >
             Izmeni piće
-          </h2>
+          </h2> */}
         </div>
 
         {error && (

@@ -3,6 +3,7 @@ import { useState } from "react";
 import "./App.css";
 import PinModal from "./components/PinModal";
 import AdminPanel from "./components/AdminPanel";
+import Clock from "./components/Clock";
 
 function App() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -17,7 +18,7 @@ function App() {
       <header className="bg-white shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-2 py-4 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-800">Test</h1>
-
+            <Clock/>
           <div className="flex items-center gap-4">
             {!isAdmin && (
               <button
