@@ -117,15 +117,15 @@ const Orders = () => {
       {/* Footer – total i dugmad */}
       <div className="border-t border-gray-100 bg-gray-50 px-5 py-4">
         <div className="mb-4 flex items-center justify-between">
-          <span className="text-lg font-semibold text-gray-900">Total</span>
+          <span className="text-lg font-semibold text-gray-900">Ukupno</span>
           <span className="text-2xl font-bold text-gray-900">
-            ${order.total.toFixed(2)}
+            {order.total.toFixed(2)} RSD
           </span>
         </div>
 
         <div className="flex gap-3">
-          <button className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100">
-            See Details
+          <button className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 cursor-pointer">
+            Pogledaj detalje
           </button>
           {/* <button className="flex-1 rounded-xl bg-yellow-400 px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-yellow-500">
             Pay Bill

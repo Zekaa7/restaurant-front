@@ -23,7 +23,6 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
   const closeView = () => {
     setSelectedCard(null);
   };
-
   // Handle submit iz modalnog prozora
   const handleModalSubmit = async (data: ModalSubmitData) => {
     try {
@@ -60,34 +59,41 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
   return (
     <main className="mx-auto max-w-7xl px-6 py-10 space-y-12">
       {/* ACTION CARDS */}
-      {isAdmin && (
+      
         <section>
-          <h2 className="mb-6 text-2xl font-semibold text-gray-900">
-            Admin Panel
-          </h2>
+           <h2 className="mb-6 text-2xl font-semibold text-gray-900">
+    {isAdmin ? "Admin Panel" : "Pregled porudžbina"}
+  </h2>
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-            <ReusableCard
-              img="🍺"
-              title="Ažuriraj meni"
-              text="Dodaj, obriši ili izmeni pića u ponudi restorana."
-              onClick={clickedCardHandler}
-            />
-            <ReusableCard
+                 <ReusableCard
               img="📋"
               title="Pregled porudžbina"
               text="Pratite trenutne i završene porudžbine u realnom vremenu."
               onClick={clickedCardHandler}
             />
+            {isAdmin && (
+             <>
+                  <ReusableCard
+              img="🍺"
+              title="Ažuriraj meni"
+              text="Dodaj, obriši ili izmeni pića u ponudi restorana."
+              onClick={clickedCardHandler}
+            />
+         
+       
             <ReusableCard
               img="📊"
               title="Statistika i izveštaji"
               text="Analiza prodaje, najprodavanija pića i dnevni prihod."
               onClick={clickedCardHandler}
             />
+             </> 
+            )}
+      
           </div>
         </section>
-      )}
+      
 
       {/* MODAL — samo za Ažuriraj meni */}
       {selectedCard === "Ažuriraj meni" && (
