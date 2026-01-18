@@ -3,13 +3,11 @@ import ReusableCard from "./ReusableCard";
 import AdditemsToMenu from "./AdditemsToMenu";
 import Orders from "./Orders";
 import type { ModalSubmitData } from "../helper";
-import {
-  newDrinkInMenu,
-  incrementStock,
-  deleteDrink,
-} from "../helper";
+import { newDrinkInMenu, incrementStock, deleteDrink } from "../helper";
+import TableIcon from "../assets/icons/table_restaurant.svg";
+import TableManagment from "./Tables/TableManagment";
 
-const PANEL_CARDS = ["Pregled porudžbina", "Statistika i izveštaji"];
+const PANEL_CARDS = ["Pregled porudžbina", "Statistika i izveštaji", "Stolovi"];
 
 const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
@@ -19,7 +17,6 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
   const clickedCardHandler = (title: string) => {
     setSelectedCard((prev) => (prev === title ? null : title));
   };
-
   const closeView = () => {
     setSelectedCard(null);
   };
@@ -85,6 +82,22 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
               text="Analiza prodaje, najprodavanija pića i dnevni prihod."
               onClick={clickedCardHandler}
             />
+            <ReusableCard
+              img={
+                <img
+                  src={TableIcon}
+                  alt="Stolovi"
+                  className="w-12 h-12 mx-auto"
+                  style={{
+                    filter:
+                      "invert(26%) sepia(51%) saturate(2872%) hue-rotate(347deg) brightness(94%) contrast(90%)", // ≈ #8B4513 saddlebrown
+                  }}
+                />
+              }
+              title="Stolovi"
+              text="Pregled i upravljanje stolovima."
+              onClick={clickedCardHandler}
+            />
           </div>
         </section>
       )}
@@ -120,10 +133,9 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
           {selectedCard === "Pregled porudžbina" && <Orders />}
 
           {selectedCard === "Statistika i izveštaji" && (
-            <div className="text-gray-500">
-              Statistika u pripremi…
-            </div>
+            <div className="text-gray-500">Statistika u pripremi…</div>
           )}
+          {selectedCard === "Stolovi" && <TableManagment />}
         </section>
       )}
     </main>
