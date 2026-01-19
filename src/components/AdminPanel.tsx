@@ -92,7 +92,7 @@ const AdminPanel = ({ isAdmin }: { isAdmin: boolean }) => {
               <img
                 src={TableIcon}
                 alt="Stolovi"
-                className="w-12 h-12 mx-auto"
+                className="w-14 h-18 mx-auto"
                 style={{
                   filter:
                     "invert(26%) sepia(51%) saturate(2872%) hue-rotate(347deg) brightness(94%) contrast(90%)", // ≈ #8B4513 saddlebrown

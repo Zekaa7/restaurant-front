@@ -1,6 +1,9 @@
 // export const ipaddress = "http://192.168.1.160";
 export const ipaddress = "http://localhost:3001";
 
+export const token =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrb25vYmFyIiwicm9sZSI6IndhaXRlciIsInR5cGUiOiJhY2Nlc3MifQ.OeH3E7ln2HiwRgqOmnSSO_TnpmKeTIeBc6q8A6ZI7wI";
+
 // Definišemo tipove za različite akcije
 export interface AddMenuItemPayload {
   first: {

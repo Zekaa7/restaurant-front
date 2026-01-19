@@ -2,6 +2,7 @@ import React from "react";
 import type { Table } from "./TableManagment";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import TableIcon from "../../assets/icons/table_restaurant.svg";
 
 interface TableModalProps {
   table: Table | null;
@@ -47,8 +48,11 @@ const TableModal = ({ table, onClose, onReserve }: TableModalProps) => {
 
     return `${day}.${month}.${year}. ${hours}:${minutes}`;
   }
+
+  //Post req za promenu iz slobodnog u rezervisano
   const handleConfirmReservation = () => {
     console.log(formatDateTime(reservationDateTime!));
+    onClose();
   };
   return (
     <div
@@ -60,8 +64,19 @@ const TableModal = ({ table, onClose, onReserve }: TableModalProps) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-5">
-          <h3 className="text-xl font-bold text-gray-800">
-            Sto broj {table.id}
+          <h3 className="text-2xl font-bold flex items-center text-gray-800">
+            Sto broj {table.id}{" "}
+            {
+              <img
+                src={TableIcon}
+                alt="Stolovi"
+                className="w-8 h-8 mx-auto"
+                style={{
+                  filter:
+                    "invert(26%) sepia(51%) saturate(2872%) hue-rotate(347deg) brightness(94%) contrast(90%)", // ≈ #8B4513 saddlebrown
+                }}
+              />
+            }
           </h3>
           <button
             onClick={onClose}
@@ -73,7 +88,7 @@ const TableModal = ({ table, onClose, onReserve }: TableModalProps) => {
 
         <div className="space-y-5">
           <div>
-            <span className="text-gray-600">Status:</span>{" "}
+            <span className="text-gray-600 ">Status:</span>{" "}
             <span className="font-semibold">
               {getStatusLabel(table.status)}
             </span>

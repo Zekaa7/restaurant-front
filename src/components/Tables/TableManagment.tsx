@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TableModal from "./TableModal";
+import { token } from "../../helper";
 
 type TableStatus = "free" | "occupied" | "reserved";
 
@@ -9,6 +10,22 @@ export interface Table {
 }
 
 const TableManagement = () => {
+  useEffect(() => {
+    const getTabelGrid = async () => {
+      try {
+        const res = await fetch("http://100.78.61.84:8000/tables", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        console.log(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getTabelGrid();
+  }, []);
   const initialTables: Table[] = [
     { id: 1, status: "free" },
     { id: 2, status: "occupied" },
@@ -26,7 +43,7 @@ const TableManagement = () => {
     { id: 14, status: "reserved" },
     { id: 15, status: "free" },
   ];
-
+  console.log(token);
   const [tables, setTables] = useState<Table[]>(initialTables);
   const [showOnlyFree, setShowOnlyFree] = useState(false);
 
