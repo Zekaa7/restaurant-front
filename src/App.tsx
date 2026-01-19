@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import "./App.css";
 import PinModal from "./components/PinModal";
@@ -9,7 +9,22 @@ function App() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showPinModal, setShowPinModal] = useState<boolean>(false);
 
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      setIsAdmin(true);
+    }
+  }, []);
+
+  const handleLoginSuccess = (token: string) => {
+    localStorage.setItem("access_token", token);
+    setIsAdmin(true);
+    setShowPinModal(false);
+  };
+
   const handleLogout = () => {
+    localStorage.removeItem("access_token");
+
     setIsAdmin(false);
   };
 
@@ -18,7 +33,7 @@ function App() {
       <header className="bg-white shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-2 py-4 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-800">Test</h1>
-            <Clock/>
+          <Clock />
           <div className="flex items-center gap-4">
             {!isAdmin && (
               <button
@@ -49,9 +64,7 @@ function App() {
       <PinModal
         isOpen={showPinModal}
         onClose={() => setShowPinModal(false)}
-        onSuccess={() => {
-          setIsAdmin(true);
-        }}
+        onSuccess={handleLoginSuccess}
       />
 
       <AdminPanel

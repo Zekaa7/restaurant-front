@@ -1,92 +1,47 @@
 import { useEffect, useState } from "react";
 import TableModal from "./TableModal";
-import { token } from "../../helper";
+import { getStatusStyles, ipHome } from "../../helper";
+import { authFetch } from "../../FetchApis";
 
-type TableStatus = "free" | "occupied" | "reserved";
+export type TableStatus = "FREE" | "OCCUPIED" | "RESERVED" | "NOTINUSE";
 
 export interface Table {
-  id: number;
+  table_id: number;
   status: TableStatus;
+  table_number: number;
+  description: string;
+  status_s: string;
 }
 
 const TableManagement = () => {
+  const [tables, setTables] = useState<Table[]>([]);
+  const [showOnlyFree, setShowOnlyFree] = useState(false);
+
+  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   useEffect(() => {
-    const getTabelGrid = async () => {
+    const getTableGrid = async () => {
       try {
-        const res = await fetch("http://100.78.61.84:8000/tables", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await res.json();
-        console.log(data);
+        const res = await authFetch(`${ipHome}/tables`);
+        const { data } = await res.json();
+        setTables(data);
       } catch (error) {
         console.error(error);
       }
     };
-    getTabelGrid();
+    getTableGrid();
   }, []);
-  const initialTables: Table[] = [
-    { id: 1, status: "free" },
-    { id: 2, status: "occupied" },
-    { id: 3, status: "reserved" },
-    { id: 4, status: "free" },
-    { id: 5, status: "occupied" },
-    { id: 6, status: "free" },
-    { id: 7, status: "reserved" },
-    { id: 8, status: "occupied" },
-    { id: 9, status: "free" },
-    { id: 10, status: "free" },
-    { id: 11, status: "reserved" },
-    { id: 12, status: "occupied" },
-    { id: 13, status: "free" },
-    { id: 14, status: "reserved" },
-    { id: 15, status: "free" },
-  ];
-  console.log(token);
-  const [tables, setTables] = useState<Table[]>(initialTables);
-  const [showOnlyFree, setShowOnlyFree] = useState(false);
 
-  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
-
-  const getStatusStyles = (status: TableStatus) => {
-    switch (status) {
-      case "free":
-        return {
-          bg: "bg-emerald-500 hover:bg-emerald-600",
-          text: "text-white",
-          indicator: "bg-emerald-700",
-          label: "Slobodan",
-        };
-      case "occupied":
-        return {
-          bg: "bg-rose-500 hover:bg-rose-600",
-          text: "text-white",
-          indicator: "bg-rose-700",
-          label: "Zauzet",
-        };
-      case "reserved":
-        return {
-          bg: "bg-indigo-500 hover:bg-indigo-600",
-          text: "text-white",
-          indicator: "bg-indigo-700",
-          label: "Rezervisan",
-        };
-      default:
-        return { bg: "", text: "", indicator: "", label: "" };
-    }
-  };
   //Prosledjuje informacije o izabranom stolu
-  const selectedTable = tables.find((t) => t.id === selectedTableId) ?? null;
+  const selectedTable =
+    tables.find((t) => t.table_id === selectedTableId) ?? null;
   const displayedTables = showOnlyFree
-    ? tables.filter((t) => t.status === "free")
+    ? tables.filter((t) => t.status === "FREE")
     : tables;
 
-  const handleReserve = (tableId: number) => {
+  const handleStatusChange = (tableId: number, status: TableStatus) => {
     setTables((prev) =>
-      prev.map((t) => (t.id === tableId ? { ...t, status: "reserved" } : t))
+      prev.map((t) => (t.table_id === tableId ? { ...t, status: status } : t))
     );
-    // ovdje možeš dodati API poziv, toast obavijest i sl.
   };
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -127,8 +82,8 @@ const TableManagement = () => {
 
           return (
             <div
-              key={table.id}
-              onClick={() => setSelectedTableId(table.id)}
+              key={table.table_id}
+              onClick={() => setSelectedTableId(table.table_id)}
               className={`
                 relative flex flex-col items-center justify-center 
                 h-24 w-24 sm:h-28 sm:w-28 
@@ -143,7 +98,7 @@ const TableManagement = () => {
               <span
                 className={`text-3xl sm:text-4xl font-extrabold drop-shadow-md ${styles.text}`}
               >
-                {table.id}
+                {table.table_id}
               </span>
 
               <span
@@ -166,7 +121,7 @@ const TableManagement = () => {
         <TableModal
           table={selectedTable}
           onClose={() => setSelectedTableId(null)}
-          onReserve={handleReserve}
+          onStatusChange={handleStatusChange}
         />
       )}
       {/* Legenda */}

@@ -1,33 +1,56 @@
 // import process from "process";
 import React, { useState } from "react";
+import { ipHome } from "../helper";
 
 const pin = "2850";
 
 interface PinModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (token: string) => void;
 }
 
 const PinModal: React.FC<PinModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const [pinInput, setPinInput] = useState<string>("");
-  const [error, setError] = useState<boolean>(false);
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (pinInput === pin) {
-      onSuccess();
-      setPinInput("");
-      setError(false);
-      onClose();
-    } else {
-      setError(true);
-      setPinInput("");
+    setError(null);
+    setLoading(true);
+    try {
+      const response = await fetch(`${ipHome}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Neispravni kredencijali");
+      }
+      const data = await response.json();
+
+      localStorage.setItem("access_token", data.access_token);
+
+      onSuccess(data.access_token);
+      setUsername("");
+      setPassword("");
+    } catch (error) {
+      setError("Pogrešno korisničko ime ili lozinka");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleClose = () => {
-    setPinInput("");
-    setError(false);
+    setUsername("");
+    setPassword("");
+    setError(null);
     onClose();
   };
   if (!isOpen) return null;
@@ -40,27 +63,38 @@ const PinModal: React.FC<PinModalProps> = ({ isOpen, onClose, onSuccess }) => {
 
         <form onSubmit={handleSubmit}>
           <input
+            type="text"
+            placeholder="Korisničko ime"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full px-4 py-3 border rounded-lg mb-4"
+            required
+          />
+
+          <input
             type="password"
-            value={pinInput}
-            onChange={(e) => setPinInput(e.target.value)}
-            placeholder="Unesi PIN"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-            autoFocus
+            placeholder="Lozinka"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 border rounded-lg mb-4"
+            required
           />
 
           {error && (
             <p className="text-red-600 text-sm mb-4 text-center font-medium">
-              Pogrešan PIN!
+              {error}
             </p>
           )}
 
           <div className="flex gap-4">
             <button
               type="submit"
-              className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition"
+              disabled={loading}
+              className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
             >
-              Potvrdi
+              {loading ? "Prijava..." : "Prijavi se"}
             </button>
+
             <button
               type="button"
               onClick={handleClose}
